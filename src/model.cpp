@@ -6,9 +6,9 @@
 Model::Model(const std::string& pathToOBJ, const std::string& materialDirectory) {
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
-	std::vector<tinyobj::material_t> materials;
+	std::vector<tinyobj::material_t> tinyobj_materials;
 	std::string err;
-	bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, pathToOBJ.c_str(), materialDirectory.c_str(), true);
+	bool ret = tinyobj::LoadObj(&attrib, &shapes, &tinyobj_materials, &err, pathToOBJ.c_str(), materialDirectory.c_str(), true);
 
 	if (!err.empty()) {
 		std::cerr << err << std::endl;
@@ -19,24 +19,20 @@ Model::Model(const std::string& pathToOBJ, const std::string& materialDirectory)
 		return;
 	}
 
-	for (int currentMaterialID = -1; currentMaterialID < (int)materials.size(); ++currentMaterialID) {
-		std::shared_ptr<Material> currentMaterial;
-		if (currentMaterialID == -1) {
-			currentMaterial = ResourceManager::GetMaterial("default");
-		}
-		else {
-			tinyobj::material_t& mat = materials[currentMaterialID];
+	for (int currentMaterialID = -1; currentMaterialID < (int)tinyobj_materials.size(); ++currentMaterialID) {
+        Material currentMaterial;
+		if (currentMaterialID != -1) {
+			tinyobj::material_t& mat = tinyobj_materials[currentMaterialID];
 			glm::vec3 ambient(mat.ambient[0], mat.ambient[1], mat.ambient[2]);
 			glm::vec3 diffuse(mat.diffuse[0], mat.diffuse[1], mat.diffuse[2]);
 			glm::vec3 specular(mat.specular[0], mat.specular[1], mat.specular[2]);
-			glm::vec3 emissive(mat.emission[0], mat.emission[1], mat.emission[2]);
 			float shininess = mat.shininess;
 			//Texture* diffuseTex = nullptr;
 			//if (mat.diffuse_texname != "") {
 			//	diffuseTex = new Texture(new Image(PG_RESOURCE_DIR + mat.diffuse_texname), true, true, true);
 			//}
 
-			currentMaterial = std::make_shared<Material>(ambient, diffuse, specular, emissive, shininess, diffuseTex);
+			currentMaterial = Material(ambient, diffuse, specular, shininess);//, diffuseTex);
 		}
 
 		std::vector<glm::vec3> verts;
@@ -79,22 +75,10 @@ Model::Model(const std::string& pathToOBJ, const std::string& materialDirectory)
 			glm::vec2* texCoords = nullptr;
 			if (uvs.size())
 				texCoords = &uvs[0];
-			auto currentMesh = new Mesh(verts.size(), indices.size() / 3, &verts[0], &normals[0], texCoords, &indices[0]);
-			currentMesh->UploadToGPU(true, false);
+			Mesh currentMesh(verts.size(), indices.size() / 3, &verts[0], &normals[0], texCoords, &indices[0]);
 
-			meshes.push_back(currentMesh);
+			meshes.push_back(std::move(currentMesh));
 			materials.push_back(currentMaterial);
 		}
 	}
-
-	return model;
-}
-
-Model::~Model() {
-	for (const auto& mesh : meshes)
-		if (mesh)
-			delete mesh;
-	for (const auto& mat : materials)
-		if (mat)
-			delete mat;
 }

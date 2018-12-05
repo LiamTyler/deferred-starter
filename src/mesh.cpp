@@ -1,42 +1,26 @@
 #include "mesh.hpp"
 
 Mesh::Mesh() :
-    numVertices(0),
-    numTriangles(0),
-    vertices(nullptr),
-    normals(nullptr),
-    uvs(nullptr),
-    indices(nullptr)
+    numTriangles(0)
 {
-    for (int i = 0; i < vboName::TOTAL_VBOS; ++i) vbos[i] = -1;
+    glGenBuffers(vboID::NUM_VBOS, vbos);
+    glGenVertexArrays(1, &vao);
 }
 
-Mesh::Mesh(int numVerts, int numTris, glm::vec3* verts, glm::vec3* norms, glm::vec2* texCoords, unsigned int* _indices) :
-    numVertices(numVerts),
-    numTriangles(numTris),
-    vertices(verts),
-    normals(norms),
-    uvs(texCoords),
-    indices(_indices)
+Mesh::Mesh(int numVerts, int numTris, glm::vec3* verts, glm::vec3* norms,
+           glm::vec2* texCoords, unsigned int* indices)
 {
-    for (int i = 0; i < vboName::TOTAL_VBOS; ++i) vbos[i] = -1;
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(vboID::NUM_VBOS, vbos);
+
+    UploadToGPU(numVerts, numTris, verts, norms, texCoords, indices);
 }
 
 Mesh::~Mesh() {
-    if (vbos[0] != -1)  {
-        GLuint total = vboName::TOTAL_VBOS;
-        if (vbos[vboName::UV] == -1)
-            total -= 1;
-        glDeleteBuffers(total, vbos);
-    }
-    if (vertices)
-        delete[] vertices;
-    if (normals)
-        delete[] normals;
-    if (uvs)
-        delete[] uvs;
-    if (indices)
-        delete[] indices;
+    if (vbos[0] != -1)
+        glDeleteBuffers(vboID::NUM_VBOS, vbos);
+    if (vao != -1)
+        glDeleteVertexArrays(1, &vao);
 }
 
 Mesh::Mesh(Mesh&& mesh) {
@@ -44,20 +28,12 @@ Mesh::Mesh(Mesh&& mesh) {
 }
 
 Mesh& Mesh::operator=(Mesh&& mesh) {
-    numVertices = mesh.numVertices;
     numTriangles = mesh.numTriangles;
-    vertices = mesh.vertices;
-    normals = mesh.normals;
-    uvs = mesh.uvs;
-    indices = mesh.indices;
-    mesh.numVertices = 0;
     mesh.numTriangles = 0;
-    mesh.vertices = nullptr;
-    mesh.normals = nullptr;
-    mesh.uvs = nullptr;
-    mesh.indices = nullptr;
 
-    for (int i = 0; i < vboName::TOTAL_VBOS; ++i) {
+    vao = mesh.vao;
+    mesh.vao = -1;
+    for (int i = 0; i < vboID::NUM_VBOS; ++i) {
         vbos[i] = mesh.vbos[i];
         mesh.vbos[i] = -1;
     }
@@ -65,38 +41,19 @@ Mesh& Mesh::operator=(Mesh&& mesh) {
     return *this;
 }
 
-void Mesh::UploadToGPU(bool nullTheBuffers, bool freeMemory) {
-    if (uvs)
-        glGenBuffers(vboName::TOTAL_VBOS, vbos);
-    else
-        glGenBuffers(vboName::TOTAL_VBOS - 1, vbos);
+void Mesh::UploadToGPU(int numVerts, int numTris, glm::vec3* verts,
+        glm::vec3* norms, glm::vec2* texCoords, unsigned int* indices)
+{
+    numTriangles = numTris;
+    glBindBuffer(GL_ARRAY_BUFFER, vbos[vboID::VERTEX]);
+    glBufferData(GL_ARRAY_BUFFER, numVerts * sizeof(glm::vec3), verts, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbos[vboName::VERTEX]);
-    glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec3), vertices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, vbos[vboID::NORMAL]);
+    glBufferData(GL_ARRAY_BUFFER, numVerts * sizeof(glm::vec3), norms, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbos[vboName::NORMAL]);
-    glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec3), normals, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, vbos[vboID::UV]);
+    glBufferData(GL_ARRAY_BUFFER, numVerts * sizeof(glm::vec2), texCoords, GL_STATIC_DRAW);
 
-    if (uvs) {
-        glBindBuffer(GL_ARRAY_BUFFER, vbos[vboName::UV]);
-        glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(glm::vec2), uvs, GL_STATIC_DRAW);
-    }
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbos[vboName::INDEX]);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbos[vboID::INDEX]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * numTriangles * sizeof(unsigned int), indices, GL_STATIC_DRAW);
-
-    if (freeMemory) {
-        delete[] vertices;
-        delete[] normals;
-        if (uvs)
-            delete[] uvs;
-        delete[] indices;
-    }
-
-    if (nullTheBuffers) {
-        vertices = nullptr;
-        normals = nullptr;
-        uvs = nullptr;
-        indices = nullptr;
-    }
 }

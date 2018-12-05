@@ -1,22 +1,21 @@
 #pragma once
 
 #include <vector>
+#include <string>
+#include "mesh.hpp"
+#include "material.hpp"
 
-class Mesh;
-class Material;
 
 class Model {
 public:
     Model() = default;
 	Model(const std::string& pathToOBJ, const std::string& materialDirectory);
-	virtual ~Model();
+	virtual ~Model() = default;
 
-	// Deleting the copy constructors, because if there were multiple copies, who would
-	// be the single model to delete the mesh
+    // Deleting the copy constructors, since meshes cant be copied
+    // (see mesh.hpp as to why)
     Model(const Model& mesh) = delete;
     Model& operator=(const Model& mesh) = delete;
-
-
     Model(Model&& mesh) = default;
     Model& operator=(Model&& mesh) = default;
 

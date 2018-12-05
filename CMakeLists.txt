@@ -1,12 +1,13 @@
 # Set the minimum required version of cmake for this project
-cmake_minimum_required (VERSION 3.0)
-
-# Create a project called 'deferred_starter'
-project(deferred_starter LANGUAGES CXX)
+# Set to 3.1 so we can use the "CMAKE_CXX_STANDARD" below
+cmake_minimum_required (VERSION 3.1)
 
 # Require c++11
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Create a project called 'deferred_starter'
+project(deferred_starter)
 
 # Also disable building some of the extra things GLFW has (examples, tests, docs)
 set(GLFW_BUILD_EXAMPLES  OFF CACHE BOOL " " FORCE)
@@ -26,6 +27,7 @@ set(
     src/material.cpp
 
     ext/glad/glad.c
+    ext/tinyobjloader/tiny_obj_loader.cc
 )
 
 # Make a list of all the header files
@@ -38,9 +40,10 @@ set(
     include/material.hpp
 
     ext/glad/glad.h
+    ext/tinyobjloader/tiny_obj_loader.h
 )
  
-
+# Make a list of all of the directories to look in when doing #include "whatever.h"
 set(
     INCLUDE_DIRS
     ext/
@@ -48,6 +51,8 @@ set(
     ext/glfw/include
 )
 
+# Actually define what we are trying to produce here (an executable), as
+# well as what items are needed to create it (the header and source files)
 add_executable(${PROJECT_NAME} ${SOURCES} ${INCLUDES})
 
 # Tell cmake which directories to look in when you #include a file
@@ -57,3 +62,8 @@ include_directories(${INCLUDE_DIRS})
 # Tell cmake which libraries to link to
 # Equivalent to the "-l" option for g++
 target_link_libraries(${PROJECT_NAME} PRIVATE glfw)
+
+# If using visual studio, have this project be the default one to build when hitting F5 / Ctrl-F5
+if (MSVC)
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
+endif()

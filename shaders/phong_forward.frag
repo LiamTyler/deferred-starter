@@ -16,8 +16,8 @@ uniform bool textured;
 uniform sampler2D diffuseTex;
 
 // light information (single directional light)
-vec3 lightInViewSpace;
-vec3 lightColor;
+uniform vec3 lightInViewSpace;
+uniform vec3 lightColor;
 
 // output (fragment color)
 layout (location = 0) out vec4 finalColor;
@@ -39,7 +39,7 @@ void main() {
     outColor += lightColor * diffuseColor * max(0.0, dot(l, n));
     if (dot(l, n) > EPSILON)
         outColor += lightColor * ks * pow(max(dot(h, n), 0.0), 4*specular);
-    
+
     finalColor.rgb = outColor;
     finalColor.a   = 1.0;
 }
