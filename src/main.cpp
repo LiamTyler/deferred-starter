@@ -35,8 +35,8 @@ void UploadMaterial(Shader& shader, const Material& material) {
 }
 
 int main() {
-    // rootDirectory = "C:/Users/Tyler/Documents/deferred-starter/";
-    rootDirectory = "/home/liam/Documents/deferred-starter/";
+    rootDirectory = "C:/Users/Tyler/Documents/deferred-starter/";
+    // rootDirectory = "/home/liam/Documents/deferred-starter/";
 
     glfwSetErrorCallback(error_callback);
     if (!glfwInit())
@@ -68,8 +68,8 @@ int main() {
     glEnable(GL_DEPTH_TEST);
 
     Shader phongShader(rootDirectory + "shaders/phong.vert", rootDirectory + "shaders/phong_forward.frag");
-    Model houseModel("/home/liam/Documents/Progression/resources/models/glowSphere.obj",
-                     "/home/liam/Documents/Progression/resources/");
+
+	Model houseModel(rootDirectory + "resources/glowSphere.obj", rootDirectory + "resources/");
     // std::cout << "materials size: " << houseModel.materials.size() << std::endl;
 
     std::vector<glm::vec3> verts = {
@@ -83,36 +83,17 @@ int main() {
         glm::vec3(0, 0, 1),
         glm::vec3(0, 0, 1)
     };
+	std::vector<glm::vec2> uvs = {
+		glm::vec2(0, 0),
+		glm::vec2(0, 0),
+		glm::vec2(0, 0)
+	};
     std::vector<unsigned int> indices = {
         0, 1, 2
     };
 
-    // Mesh mesh(3, 1, &verts[0], &norms[0], nullptr, &indices[0]);
-
-    // Material mat(
-    //         glm::vec3(0),
-    //         glm::vec3(1, 0, 0),
-    //         glm::vec3(.7),
-    //         50);
-
-    GLuint vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
-    GLuint* vbos = mesh.vbos;
-    glBindBuffer(GL_ARRAY_BUFFER, vbos[Mesh::vboID::VERTEX]);
-    glEnableVertexAttribArray(phongShader["vertex"]);
-    glVertexAttribPointer(phongShader["vertex"], 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbos[Mesh::vboID::NORMAL]);
-    glEnableVertexAttribArray(phongShader["normal"]);
-    glVertexAttribPointer(phongShader["normal"], 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-    // glBindBuffer(GL_ARRAY_BUFFER, vbos[Mesh::vboID::UV]);
-    // glEnableVertexAttribArray(phongShader["inTexCoord"]);
-    // glVertexAttribPointer(phongShader["inTexCoord"], 2, GL_FLOAT, GL_FALSE, 0, 0);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbos[Mesh::vboID::INDEX]);
+    Mesh mesh(3, 1, &verts[0], &norms[0], &uvs[0], &indices[0]);
+	Material mat(glm::vec3(0), glm::vec3(1, 0, 0), glm::vec3(.7), 50);
 
     glm::mat4 view = glm::lookAt(glm::vec3(0, 0, 10), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
     glm::mat4 proj = glm::perspective(glm::radians(45.0f), SW / (float) SH, 0.1f, 100.0f);
@@ -131,14 +112,16 @@ int main() {
         glUniform3fv(phongShader["lightColor"], 1, glm::value_ptr(glm::vec3(1.0f)));
         glUniformMatrix4fv(phongShader["projectionMatrix"], 1, GL_FALSE, glm::value_ptr(proj));
 
-        glBindVertexArray(vao);
-        UploadMaterial(phongShader, mat);
+		glBindVertexArray(houseModel.meshes[0].vao);
+		//glBindVertexArray(mesh.vao);
+		UploadMaterial(phongShader, mat);
         glm::mat4 M = glm::mat4(1);
         glm::mat4 MV = view * M;
         glm::mat4 normalMatrix = glm::transpose(glm::inverse(MV));
         glUniformMatrix4fv(phongShader["modelViewMatrix"], 1, GL_FALSE, glm::value_ptr(MV));
         glUniformMatrix4fv(phongShader["normalMatrix"], 1, GL_FALSE, glm::value_ptr(normalMatrix));
-        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+		glDrawElements(GL_TRIANGLES, houseModel.meshes[0].numTriangles * 3, GL_UNSIGNED_INT, 0);
+		//glDrawElements(GL_TRIANGLES, mesh.numTriangles * 3, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
     }

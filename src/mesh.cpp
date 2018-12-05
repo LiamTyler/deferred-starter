@@ -45,14 +45,22 @@ void Mesh::UploadToGPU(int numVerts, int numTris, glm::vec3* verts,
         glm::vec3* norms, glm::vec2* texCoords, unsigned int* indices)
 {
     numTriangles = numTris;
+	glBindVertexArray(vao);
+
     glBindBuffer(GL_ARRAY_BUFFER, vbos[vboID::VERTEX]);
     glBufferData(GL_ARRAY_BUFFER, numVerts * sizeof(glm::vec3), verts, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbos[vboID::NORMAL]);
     glBufferData(GL_ARRAY_BUFFER, numVerts * sizeof(glm::vec3), norms, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbos[vboID::UV]);
     glBufferData(GL_ARRAY_BUFFER, numVerts * sizeof(glm::vec2), texCoords, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, 0);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbos[vboID::INDEX]);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, 3 * numTriangles * sizeof(unsigned int), indices, GL_STATIC_DRAW);
