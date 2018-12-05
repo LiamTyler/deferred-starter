@@ -26,7 +26,7 @@ set(
     src/model.cpp
     src/material.cpp
 
-    ext/glad/glad.c
+    ext/glad/src/glad.c
     ext/tinyobjloader/tiny_obj_loader.cc
 )
 
@@ -39,7 +39,7 @@ set(
     include/model.hpp
     include/material.hpp
 
-    ext/glad/glad.h
+    ext/glad/include/glad/glad.h
     ext/tinyobjloader/tiny_obj_loader.h
 )
  
@@ -49,6 +49,7 @@ set(
     ext/
     include/
     ext/glfw/include
+    ext/glad/include
 )
 
 # Actually define what we are trying to produce here (an executable), as

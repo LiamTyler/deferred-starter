@@ -3,7 +3,6 @@
 #include "common.hpp"
 //#include "types/texture.h"
 
-class Shader;
 class Material {
 public:
 	Material(
