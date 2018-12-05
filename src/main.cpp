@@ -100,6 +100,16 @@ int main() {
     glm::mat4 view = glm::lookAt(glm::vec3(0, 0, 10), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
     glm::mat4 proj = glm::perspective(glm::radians(45.0f), SW / (float) SH, 0.1f, 100.0f);
 
+	// Do this stupid hotfix for Mac + GLFW. The window doesn't draw correctly
+	// until you move/resize the window, so just move it manually and back again
+	// here to fix it.
+	{
+		int x, y;
+		glfwGetWindowPos(window, &x, &y);
+		glfwSetWindowPos(window, 100, 100);
+		glfwSetWindowPos(window, x, y);
+	}
+
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 

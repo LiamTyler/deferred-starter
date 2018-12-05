@@ -43,10 +43,6 @@ set(
     ext/tinyobjloader/tiny_obj_loader.h
 )
 
-# Actually define what we are trying to produce here (an executable), as
-# well as what items are needed to create it (the header and source files)
-add_executable(${PROJECT_NAME} ${SOURCES} ${INCLUDES})
- 
 # Make a list of all of the directories to look in when doing #include "whatever.h"
 set(
     INCLUDE_DIRS
@@ -61,27 +57,9 @@ set(
     glfw
 )
 
-# Macs have their own special frameworks that need to be included.
-# Try to find them using find_library, and add them to the list of libraries
-if (APPLE)
-    INCLUDE_DIRECTORIES(/System/Library/Frameworks)
-    FIND_LIBRARY(COCOA_LIBRARY Cocoa)
-    FIND_LIBRARY(OpenGL_LIBRARY OpenGL)
-    FIND_LIBRARY(IOKit_LIBRARY IOKit)
-    FIND_LIBRARY(CoreVideo_LIBRARY CoreVideo)
-    message(${COCOA_LIBRARY})
-    message(${IOKIT_LIBRARY})
-    message(${COREVID_LIBRARY})
-    message(${OpenGL_LIBRARY})
-    set(LIBS
-        ${LIBS}
-        ${COCOA_LIBRARY}
-        ${IOKIT_LIBRARY}
-        ${COREVID_LIBRARY}
-        ${OpenGL_LIBRARY}
-    )
-    message("LIBS: ${LIBS}")
-endif()
+# Actually define what we are trying to produce here (an executable), as
+# well as what items are needed to create it (the header and source files)
+add_executable(${PROJECT_NAME} ${SOURCES} ${INCLUDES})
 
 # Tell cmake which directories to look in when you #include a file
 # Equivalent to the "-I" option for g++
