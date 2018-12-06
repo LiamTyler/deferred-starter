@@ -15,9 +15,7 @@ set(GLFW_BUILD_TESTS     OFF CACHE BOOL " " FORCE)
 set(GLFW_BUILD_DOCS      OFF CACHE BOOL " " FORCE)
 
 # Now actually run cmake on the CMakeLists.txt file found inside of the GLFW directory
-# The 'EXCLUDE_FROM_ALL' excludes it from the Visual Studio solution (just a preference
-# / organizational thing)
-add_subdirectory(ext/glfw EXCLUDE_FROM_ALL)
+add_subdirectory(ext/glfw)
 
 # Create the root_directory.hpp file from the root_directory.hpp.in template
 # This just defines a string containing the path to the root directory of this
