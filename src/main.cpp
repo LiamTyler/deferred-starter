@@ -2,11 +2,10 @@
 #include "common.hpp"
 #include "shader.hpp"
 #include "model.hpp"
+#include "root_directory.hpp"
 
-const int SW = 1920;
-const int SH = 1080;
-
-std::string rootDirectory;
+const int SW = 1280;
+const int SH = 720;
 
 static void error_callback(int error, const char* description) {
     std::cerr << "GLFW Error: " << description << std::endl;
@@ -35,9 +34,6 @@ void UploadMaterial(Shader& shader, const Material& material) {
 }
 
 int main() {
-    rootDirectory = "C:/Users/Tyler/Documents/deferred-starter/";
-    // rootDirectory = "/home/liam/Documents/deferred-starter/";
-
     glfwSetErrorCallback(error_callback);
     if (!glfwInit())
         exit(EXIT_FAILURE);
@@ -69,33 +65,11 @@ int main() {
     glViewport(0, 0, SW, SH);
     glEnable(GL_DEPTH_TEST);
 
-    Shader phongShader(rootDirectory + "shaders/phong.vert", rootDirectory + "shaders/phong_forward.frag");
+    Shader phongShader(ROOT_DIR "shaders/phong.vert", ROOT_DIR "shaders/phong_forward.frag");
 
-	Model houseModel(rootDirectory + "resources/glowSphere.obj", rootDirectory + "resources/");
-    // std::cout << "materials size: " << houseModel.materials.size() << std::endl;
+	Model houseModel(ROOT_DIR "resources/glowSphere.obj", ROOT_DIR "resources/");
 
-    std::vector<glm::vec3> verts = {
-        glm::vec3(-5, 5, 0),
-        glm::vec3(-5, -5, 0),
-        glm::vec3(5, -5, 0)
-    };
-
-    std::vector<glm::vec3> norms = {
-        glm::vec3(0, 0, 1),
-        glm::vec3(0, 0, 1),
-        glm::vec3(0, 0, 1)
-    };
-	std::vector<glm::vec2> uvs = {
-		glm::vec2(0, 0),
-		glm::vec2(0, 0),
-		glm::vec2(0, 0)
-	};
-    std::vector<unsigned int> indices = {
-        0, 1, 2
-    };
-
-    Mesh mesh(3, 1, &verts[0], &norms[0], &uvs[0], &indices[0]);
-	Material mat(glm::vec3(0), glm::vec3(1, 0, 0), glm::vec3(.7), 50);
+	Material mat(glm::vec3(0), glm::vec3(1, 0, 0), glm::vec3(.7f), 50);
 
     glm::mat4 view = glm::lookAt(glm::vec3(0, 0, 10), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
     glm::mat4 proj = glm::perspective(glm::radians(45.0f), SW / (float) SH, 0.1f, 100.0f);
@@ -125,7 +99,6 @@ int main() {
         glUniformMatrix4fv(phongShader["projectionMatrix"], 1, GL_FALSE, glm::value_ptr(proj));
 
 		glBindVertexArray(houseModel.meshes[0].vao);
-		//glBindVertexArray(mesh.vao);
 		UploadMaterial(phongShader, mat);
         glm::mat4 M = glm::mat4(1);
         glm::mat4 MV = view * M;
@@ -133,7 +106,6 @@ int main() {
         glUniformMatrix4fv(phongShader["modelViewMatrix"], 1, GL_FALSE, glm::value_ptr(MV));
         glUniformMatrix4fv(phongShader["normalMatrix"], 1, GL_FALSE, glm::value_ptr(normalMatrix));
 		glDrawElements(GL_TRIANGLES, houseModel.meshes[0].numTriangles * 3, GL_UNSIGNED_INT, 0);
-		//glDrawElements(GL_TRIANGLES, mesh.numTriangles * 3, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
     }

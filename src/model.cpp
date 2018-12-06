@@ -63,7 +63,7 @@ Model::Model(const std::string& pathToOBJ, const std::string& materialDirectory)
 							uvs.emplace_back(tx, ty);
 						}
 
-						indices.push_back(indices.size());
+						indices.push_back((unsigned int) indices.size());
 					}
 				}
 			}
@@ -75,7 +75,7 @@ Model::Model(const std::string& pathToOBJ, const std::string& materialDirectory)
 			glm::vec2* texCoords = nullptr;
 			if (uvs.size())
 				texCoords = &uvs[0];
-			Mesh currentMesh(verts.size(), indices.size() / 3, &verts[0], &normals[0], texCoords, &indices[0]);
+			Mesh currentMesh((int) verts.size(), (int) indices.size() / 3, &verts[0], &normals[0], texCoords, &indices[0]);
 
 			meshes.push_back(std::move(currentMesh));
 			materials.push_back(currentMaterial);

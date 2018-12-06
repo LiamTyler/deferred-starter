@@ -15,7 +15,16 @@ set(GLFW_BUILD_TESTS     OFF CACHE BOOL " " FORCE)
 set(GLFW_BUILD_DOCS      OFF CACHE BOOL " " FORCE)
 
 # Now actually run cmake on the CMakeLists.txt file found inside of the GLFW directory
-add_subdirectory(ext/glfw)
+# The 'EXCLUDE_FROM_ALL' excludes it from the Visual Studio solution (just a preference
+# / organizational thing)
+add_subdirectory(ext/glfw EXCLUDE_FROM_ALL)
+
+# Create the root_directory.hpp file from the root_directory.hpp.in template
+# This just defines a string containing the path to the root directory of this
+# project. Really handy when compiling this project on new machines, since you
+# dont have to change any file path's to shaders, OBJs, etc.
+configure_file(${CMAKE_SOURCE_DIR}/cmake/root_directory.hpp.in ${CMAKE_SOURCE_DIR}/include/root_directory.hpp)
+
 
 # Make a list of all the implementation files
 set(
@@ -38,6 +47,7 @@ set(
     include/mesh.hpp
     include/model.hpp
     include/material.hpp
+    include/root_directory.hpp
 
     ext/glad/include/glad/glad.h
     ext/tinyobjloader/tiny_obj_loader.h
@@ -69,7 +79,17 @@ include_directories(${INCLUDE_DIRS})
 # Equivalent to the "-l" option for g++
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
 
-# If using visual studio, have this project be the default one to build when hitting F5 / Ctrl-F5
+# When compiling this in Debug mode, tack on a "_debug" to the end of the executable name
+set_target_properties(
+    ${PROJECT_NAME}
+    PROPERTIES
+    DEBUG_POSTFIX _debug
+)
+
+# For Visual Studio only
 if (MSVC)
+    # Do a parallel compilation of this project
+    target_compile_options(${PROJECT_NAME} PRIVATE "/MP")
+    # Have this project be the default one to build when hitting F5 / Ctrl-F5
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 endif()
