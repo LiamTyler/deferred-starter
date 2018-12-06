@@ -1,6 +1,7 @@
 build/
 a.out
 *.swp
+include/root_directory.hpp
 
 # Prerequisites
 *.d
