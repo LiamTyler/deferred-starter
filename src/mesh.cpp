@@ -15,7 +15,7 @@ Mesh::Mesh(int numVerts, int numTris, glm::vec3* verts, glm::vec3* norms,
 
     UploadToGPU(numVerts, numTris, verts, norms, texCoords, indices);
 }
-
+/*
 Mesh::~Mesh() {
     if (vbos[0] != -1)
         glDeleteBuffers(vboID::NUM_VBOS, vbos);
@@ -40,6 +40,7 @@ Mesh& Mesh::operator=(Mesh&& mesh) {
 
     return *this;
 }
+*/
 
 void Mesh::UploadToGPU(int numVerts, int numTris, glm::vec3* verts,
         glm::vec3* norms, glm::vec2* texCoords, unsigned int* indices)

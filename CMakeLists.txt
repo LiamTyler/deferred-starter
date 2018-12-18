@@ -29,9 +29,13 @@ set(
     SOURCES
     src/main.cpp
     src/shader.cpp
+    src/camera.cpp
     src/mesh.cpp
     src/model.cpp
     src/material.cpp
+    src/transform.cpp
+    src/resource_loader.cpp
+    src/window.cpp
 
     ext/glad/src/glad.c
     ext/tinyobjloader/tiny_obj_loader.cc
@@ -41,11 +45,15 @@ set(
 set(
     INCLUDES
     include/shader.hpp
+    include/camera.hpp
     include/common.hpp
     include/mesh.hpp
     include/model.hpp
     include/material.hpp
     include/root_directory.hpp
+    include/transform.hpp
+    include/resource_loader.hpp
+    include/window.hpp
 
     ext/glad/include/glad/glad.h
     ext/tinyobjloader/tiny_obj_loader.h
