@@ -1,6 +1,6 @@
 # Blender v2.79 (sub 0) OBJ File: ''
 # www.blender.org
-mtllib glowSphere.mtl
+mtllib sphere.mtl
 o Sphere
 v 0.000000 0.707107 -0.707107
 v 0.000000 -0.382684 -0.923880

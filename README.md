@@ -1,6 +1,11 @@
 # deferred-starter
 
 ## Description
+Starter code for students starting on deferred rendering, after they complete their first OpenGL project themselves. This code is designed with the following goals in mind:
+1. Provide them with a lot of the grunt work code (model loading, shader loading, etc), to help them actually focus on the graphics part of the project, and making cool scenes
+2. Show them how a project could potentially be structured in an extensible way
+3. Compile on Linux, Windows, and Mac, without needing to install anything else (hence the use of CMake, GLAD, and GLFW)
+4. Show them how they how to setup cross platform projects using CMake
 
 ## Installing + Compiling
 ```

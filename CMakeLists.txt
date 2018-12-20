@@ -57,6 +57,8 @@ set(
 
     ext/glad/include/glad/glad.h
     ext/tinyobjloader/tiny_obj_loader.h
+    ext/stb_image/stb_image.h
+    ext/stb_image/stb_image_write.h
 )
 
 # Make a list of all of the directories to look in when doing #include "whatever.h"

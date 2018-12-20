@@ -1,5 +1,7 @@
 #include "resource_loader.hpp"
 #include "tinyobjloader/tiny_obj_loader.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image/stb_image.h"
 #include <iostream>
 
 namespace resource {
@@ -18,9 +20,13 @@ namespace resource {
 		if (!ret)
 			return false;
 
-		model.meshes.clear();
-		model.materials.clear();
+		model.Free();
+
+		// In OBJ format, each triangle can have its own material. So, loop through all the materials that TinyOBJ
+		// parsed, and for each one create a mesh containing all of the triangles that have that material. 
 		for (int currentMaterialID = -1; currentMaterialID < (int)tinyobj_materials.size(); ++currentMaterialID) {
+
+			// if currentMaterialID == -1, use the default mesh, otherwise use the one that tinyobj loaded
 			Material currentMaterial;
 			if (currentMaterialID != -1) {
 				tinyobj::material_t& mat = tinyobj_materials[currentMaterialID];
@@ -28,14 +34,32 @@ namespace resource {
 				glm::vec3 diffuse(mat.diffuse[0], mat.diffuse[1], mat.diffuse[2]);
 				glm::vec3 specular(mat.specular[0], mat.specular[1], mat.specular[2]);
 				float shininess = mat.shininess;
-				//Texture* diffuseTex = nullptr;
-				//if (mat.diffuse_texname != "") {
-				//	diffuseTex = new Texture(new Image(PG_RESOURCE_DIR + mat.diffuse_texname), true, true, true);
-				//}
+				GLuint diffuseTex = -1;
+				if (mat.diffuse_texname != "") {
+					std::string fullTexPath = materialDirectory + mat.diffuse_texname;
+					int nC, width, height;
+					stbi_set_flip_vertically_on_load(true);
+					unsigned char* pixels = stbi_load(fullTexPath.c_str(), &width, &height, &nC, 4);
+					if (!pixels) {
+						std::cout << "Failed to load diffuse texture: " << fullTexPath << std::endl;
+						model.Free();
+						return false;
+					} else {
+						glGenTextures(1, &diffuseTex);
+						glBindTexture(GL_TEXTURE_2D, diffuseTex);
+						glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+						stbi_image_free(pixels);
+					}
+				}
 
-				currentMaterial = Material(ambient, diffuse, specular, shininess);//, diffuseTex);
+				currentMaterial = Material(ambient, diffuse, specular, shininess, diffuseTex);
 			}
 
+			// now find all of the triangles with this materialID, and build the mesh
 			std::vector<glm::vec3> verts;
 			std::vector<glm::vec3> normals;
 			std::vector<glm::vec2> uvs;
@@ -77,7 +101,7 @@ namespace resource {
 			if (verts.size()) {
 				Mesh currentMesh((int)verts.size(), (int)indices.size() / 3, &verts[0], &normals[0], &uvs[0], &indices[0]);
 				model.meshes.push_back(std::move(currentMesh));
-				model.materials.push_back(currentMaterial);
+				model.materials.push_back(std::move(currentMaterial));
 			}
 		}
 		return true;

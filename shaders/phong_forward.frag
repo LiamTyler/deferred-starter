@@ -11,7 +11,7 @@ in vec2 texCoord;
 uniform vec3 ka;
 uniform vec3 kd;
 uniform vec3 ks;
-uniform float specular;
+uniform float shininess;
 uniform bool textured;
 uniform sampler2D diffuseTex;
 
@@ -28,7 +28,7 @@ void main() {
     
     vec3 diffuseColor = kd;
     if (textured) {
-        diffuseColor *= texture(diffuseTex, vec2(texCoord.x, 1 - texCoord.y)).xyz;
+        diffuseColor *= texture(diffuseTex, texCoord).xyz;
     }
 
     vec3 outColor = vec3(0);
@@ -38,7 +38,7 @@ void main() {
     outColor += lightColor * ka;
     outColor += lightColor * diffuseColor * max(0.0, dot(l, n));
     if (dot(l, n) > EPSILON)
-        outColor += lightColor * ks * pow(max(dot(h, n), 0.0), 4*specular);
+        outColor += lightColor * ks * pow(max(dot(h, n), 0.0), 4*shininess);
 
     finalColor.rgb = outColor;
     finalColor.a   = 1.0;

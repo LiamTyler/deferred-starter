@@ -12,20 +12,20 @@ void UploadMaterial(const Shader& shader, const Material& material) {
     glUniform3fv(shader.getUniform("ka"), 1, glm::value_ptr(material.ambient));
     glUniform3fv(shader.getUniform("kd"), 1, glm::value_ptr(material.diffuse));
     glUniform3fv(shader.getUniform("ks"), 1, glm::value_ptr(material.specular));
-    glUniform1f(shader.getUniform("specular"), material.shininess);
-    glUniform1i(shader.getUniform("textured"), false);
+    glUniform1f(shader.getUniform("shininess"), material.shininess);
 
-    // if (material.diffuseTexture) {
-    //     glUniform1i(shader.getUniformLocation("textured"], true);
-    //     glActiveTexture(GL_TEXTURE0);
-    //     glBindTexture(GL_TEXTURE_2D, material.diffuseTexture->getGPUHandle());
-    //     glUniform1i(shader.getUniformLocation("diffuseTex"], 0);
-    // } else {
-    //     glUniform1i(shader.getUniformLocation("textured"], false);
-    // }
+     if (material.diffuseTexture != -1) {
+         glUniform1i(shader.getUniform("textured"), true);
+         glActiveTexture(GL_TEXTURE0);
+         glBindTexture(GL_TEXTURE_2D, material.diffuseTexture);
+         glUniform1i(shader.getUniform("diffuseTex"), 0);
+     } else {
+         glUniform1i(shader.getUniform("textured"), false);
+     }
 }
 
 void RenderModel(const Camera& camera, const Shader& shader, const Model& model) {
+	// a obj/model can have more than 1 mesh inside of it, so draw all of them
 	for (int i = 0; i < model.meshes.size(); ++i) {
 		glBindVertexArray(model.meshes[i].vao);
 		UploadMaterial(shader, model.materials[i]);
@@ -38,28 +38,72 @@ void RenderModel(const Camera& camera, const Shader& shader, const Model& model)
 	}
 }
 
+
+// TODO: Fill in the following four functions for setting up the gBuffer
+GLuint createFBO() {
+	GLuint fbo;
+
+	return fbo;
+}
+
+GLuint createFBOTexture(GLenum internalType) {
+	GLuint tex;
+
+	return tex;
+}
+
+void attachColorTexturesToFBO(const std::vector<GLuint>& textures) {
+
+}
+
+GLuint createAndAttachDepthRBO() {
+	GLuint depthRBO;
+
+	return depthRBO;
+}
+
+bool finalizeFBO() {
+	// return true of false depending on whether the currently bound FBO was
+	// setup successfully, or with errors
+	return true;
+}
+
 int main() {
-	window::Init();
+	// create a window and opengl context
+	window::Init("Deferred Starter Code", 1280, 720);
     glViewport(0, 0, window::width(), window::height());
 	glEnable(GL_DEPTH_TEST);
 
-	std::string pathToVertexShader = ROOT_DIR "shaders/phong.vert";
-	std::string pathToFragmentShader = ROOT_DIR "shaders/phong_forward.frag";
+	// load phong shader. Note: the ROOT_DIR variable is configured by CMake
 	Shader phongShader;
-	if (!resource::loadShader(phongShader, pathToVertexShader, pathToFragmentShader)) {
-		std::cout << "Failed to load the shader: " << pathToVertexShader << " + " << pathToFragmentShader << std::endl;
+	if (!resource::loadShader(phongShader, ROOT_DIR "shaders/phong.vert", ROOT_DIR "shaders/phong_forward.frag")) {
+		std::cout << "Failed to load the phong shader" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
-	Model houseModel;
-	if (!resource::loadModel(houseModel, ROOT_DIR "resources/cube.obj", ROOT_DIR "resources/")) {
+	// Setup the scene: camera at (0,0,10) looking at origin, and 1 model at the origin, and 1 white directional light
+	Camera camera = Camera(Transform(glm::vec3(0, 0, 10)));
+	glm::vec3 lightDirInWorldSpace = glm::vec3(.8, -.5, -1);
+	glm::vec3 lightColor = glm::vec3(1, 1, 1);
+	Model model;
+	if (!resource::loadModel(model, ROOT_DIR "resources/cube.obj", ROOT_DIR "resources/")) {
 		std::cout << "Failed to load the OBJ: " << ROOT_DIR "resources/cube.obj" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	houseModel.materials[0] = Material(glm::vec3(0), glm::vec3(1, 0, 0), glm::vec3(.7f), 100);
-	houseModel.transform = Transform(glm::vec3(0), glm::vec3(0), glm::vec3(1));
 
-	Camera camera = Camera(Transform(glm::vec3(0, 0, 10)));
+	// TODO: setup deferred shaders
+
+	// TODO: create a frameBuffer object (gBuffer)
+	GLuint gBuffer = createFBO();
+	// TODO: create the gBuffer textures
+	
+	// TODO: attach the textures to the gBuffer
+
+	// TODO: create RenderBufferObject (RBO) for gBuffer's depth texture
+
+	// TODO: finalize gBuffer / check for errors
+
+
 
 	// Do this stupid hotfix for Mac + GLFW. The window doesn't draw correctly
 	// until you move/resize the window, so just move it manually and back again
@@ -71,10 +115,12 @@ int main() {
 		glfwSetWindowPos(window::handle(), x, y);
 	}
 
-	// Fix the mouse on the screen, and record first position
+	// Fix the cursor for unlimited camera movement, and record first cursor position
 	glfwSetInputMode(window::handle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glm::dvec2 lastCursorPos, currCursorPos;
 	glfwGetCursorPos(window::handle(), &lastCursorPos.x, &lastCursorPos.y);
+
+	// main loop
     while (!window::shouldClose()) {
 		// Update internal input input state (keys, mouse, etc)
         glfwPollEvents();
@@ -102,34 +148,47 @@ int main() {
 			glfwGetKey(wHandle, GLFW_KEY_S) == GLFW_RELEASE)
 			camera.velocity.z = 0;
 
+		// update the camera's rotation based on the change in the cursor position
 		glfwGetCursorPos(window::handle(), &currCursorPos.x, &currCursorPos.y);
 		auto dPos = -0.003 * (currCursorPos - lastCursorPos);
-		camera.transform.rotation.x += dPos.y;
-		camera.transform.rotation.y += dPos.x;
+		camera.transform.rotation.x += (float) dPos.y;
+		camera.transform.rotation.y += (float) dPos.x;
 		lastCursorPos = currCursorPos;
 
 
 		// Update scene
 		camera.Update(.016f);
 
+		// TODO: render the scene to gBuffer
 
-		// Render scene
-        glClearColor(0, 1, 0, 1);
+		// TODO: copy gBuffer depth to screen
+
+		// TODO: draw and light gBuffer's contents
+		// hint: keep in mind whether depth testing + writing are on
+
+
+
+
+
+		// TODO: this forward renders the scene. Get rid of and use deferred
+        glClearColor(0, 0, 0, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         phongShader.Enable();
 
         // Update lights and projection matrix
-		glm::vec3 lightDirInWorldSpace = glm::vec3(0, 0, -1);
         glm::vec3 lightInViewSpace = glm::vec3(camera.GetV() * glm::vec4(lightDirInWorldSpace, 0));
         glUniform3fv(phongShader.getUniform("lightInViewSpace"), 1, glm::value_ptr(lightInViewSpace));
-        glUniform3fv(phongShader.getUniform("lightColor"), 1, glm::value_ptr(glm::vec3(1.0f)));
+        glUniform3fv(phongShader.getUniform("lightColor"), 1, glm::value_ptr(lightColor));
         glUniformMatrix4fv(phongShader.getUniform("projectionMatrix"), 1, GL_FALSE, glm::value_ptr(camera.GetP()));
 
-		RenderModel(camera, phongShader, houseModel);
+		RenderModel(camera, phongShader, model);
 
         window::swapBuffers();
     }
+
+	// TODO: free the gBuffer + all of its color and depth textures
+
 
 	// Free up all of the resources
 	phongShader.Free();
